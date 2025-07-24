@@ -30,17 +30,37 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
           KEY: ${{ secrets.EC2_KEY }}
         run: |
+          # EC2 키 파일을 생성하고 권한 설정
           echo "$KEY" > ec2key.pem
           chmod 600 ec2key.pem
+
+          # .git 디렉토리를 제외하고 코드 압축 (오류 무시)
           tar --exclude='.git' --warning=no-file-changed -czf code.tar.gz . || true
+
+          # 압축된 코드를 EC2 인스턴스로 복사
           scp -i ec2key.pem -o StrictHostKeyChecking=no code.tar.gz $USER@$HOST:/home/$USER/python-ec2-github-actions/
+
+          # SSH를 통해 EC2에 접속하여 배포 및 서버 실행
           ssh -i ec2key.pem -o StrictHostKeyChecking=no $USER@$HOST "
+            # 시간대 설정 (서울)
             sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime &&
+            # 프로젝트 디렉토리로 이동
             cd /home/$USER/python-ec2-github-actions &&
+            # 압축 해제
             tar -xzf code.tar.gz &&
+            # python3-pip 설치 확인 및 설치 (yum 사용)
             (python3 -m pip --version || python3 -m ensurepip --upgrade || sudo yum install -y python3-pip) &&
+            # pip 업그레이드
             python3 -m pip install --upgrade pip &&
+            # Python 의존성 설치
             pip3 install -r requirements.txt &&
-            nohup env TZ=Asia/Seoul python3 src/main.py </dev/null > app.log 2>&1 &
+            # 기존에 실행 중인 python 서버 프로세스 종료 (있다면)
+            pkill -f 'python3 src/main.py' || true &&
+            # setsid와 nohup을 사용하여 새로운 세션으로 프로세스 시작, 터미널에서 완전히 분리
+            # 표준 입력은 /dev/null로, 표준 출력과 에러는 app.log로 리다이렉션
+            # TZ 환경 변수를 명시적으로 설정하여 서버 내부 시간대도 서울로 맞춤
+            setsid nohup env TZ=Asia/Seoul python3 src/main.py </dev/null > app.log 2>&1 &
+            # SSH 세션 즉시 종료
+            exit
           "
           
