@@ -1,6 +1,7 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 from datetime import datetime
+import pytz
 
 
 def send_mattermost_message(webhook_url, message):
@@ -13,17 +14,24 @@ def send_mattermost_message(webhook_url, message):
 
 
 def schedule_multiple_notifications(webhook_url, messages, times):
-    scheduler = BlockingScheduler()
+    scheduler = BlockingScheduler(timezone=pytz.timezone("Asia/Seoul"))  # pytz 타임존 명시
 
     for i, message in enumerate(messages):
         time = times[i]
-        scheduler.add_job(send_mattermost_message, 'cron', day_of_week='mon-fri', hour=time.hour, minute=time.minute, args=[webhook_url, message])
+        scheduler.add_job(
+            send_mattermost_message,
+            'cron',
+            day_of_week='mon-fri',
+            hour=time.hour,
+            minute=time.minute,
+            args=[webhook_url, message]
+        )
 
     scheduler.start()
 
 
 webhook_url = 'https://meeting.ssafy.com/hooks/s9kdaz8mp3ghxx5a8qgzzrfhha'
 messages = ['@all 입실 체크 하세요!', '@all 퇴실 체크 하세요!']
-times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '15:25']]
+times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '15:30']]
 
 schedule_multiple_notifications(webhook_url, messages, times)
