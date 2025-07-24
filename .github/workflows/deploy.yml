@@ -30,6 +30,10 @@ jobs:
             # 기존에 실행 중인 python 서버 프로세스 종료 (있다면)
             pkill -f 'python3 src/main.py' || true
           script: |
+            # EC2의 프로젝트 디렉토리로 이동
+            # 이 명령이 없으면 'requirements.txt' 파일을 찾을 수 없습니다.
+            cd /home/${{ secrets.EC2_USER }}/python-ec2-github-actions
+
             # 시간대 설정 (서울)
             sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 
