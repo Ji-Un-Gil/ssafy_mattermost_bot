@@ -23,6 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+
       - name: Deploy to EC2
         env:
           HOST: ${{ secrets.EC2_HOST }}
@@ -31,9 +32,11 @@ jobs:
         run: |
           echo "$KEY" > ec2key.pem
           chmod 600 ec2key.pem
-          scp -i ec2key.pem -o StrictHostKeyChecking=no -r . $USER@$HOST:/home/$USER/python-ec2-github-actions
+          tar --exclude='.git' -czf code.tar.gz .
+          scp -i ec2key.pem -o StrictHostKeyChecking=no code.tar.gz $USER@$HOST:/home/$USER/python-ec2-github-actions/
           ssh -i ec2key.pem -o StrictHostKeyChecking=no $USER@$HOST '
             cd /home/$USER/python-ec2-github-actions &&
+            tar -xzf code.tar.gz &&
             python3 -m pip install --upgrade pip &&
             pip3 install -r requirements.txt &&
             python3 src/main.py
