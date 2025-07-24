@@ -12,48 +12,35 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        # 이 스텝에서 GitHub 저장소의 코드를 GitHub Actions 러너로 가져옵니다.
 
-      - name: Deploy with SSH
-        uses: appleboy/ssh-action@master
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          port: 22
-          # 'script' 대신 'script_stop'과 'script_start'를 사용하여
-          # 배포 전/후 스크립트를 명확히 분리하고, 'source'를 사용하여
-          # 로컬 (GitHub Actions 러너)의 파일을 EC2로 전송합니다.
-          source: "." # 현재 GitHub Actions 러너의 작업 디렉토리 (체크아웃된 코드)
-          target: "/home/${{ secrets.EC2_USER }}/python-ec2-github-actions" # EC2의 대상 디렉토리
-          script_stop: |
-            # 기존에 실행 중인 python 서버 프로세스 종료 (있다면)
-            pkill -f 'python3 src/main.py' || true
-          script: |
-            # EC2의 프로젝트 디렉토리로 이동
-            # 이 명령이 없으면 'requirements.txt' 파일을 찾을 수 없습니다.
-            cd /home/${{ secrets.EC2_USER }}/python-ec2-github-actions
+          python-version: '3.8'
 
-            # 시간대 설정 (서울)
-            sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-            # python3-pip가 설치되어 있지 않을 경우를 대비하여 설치 명령 추가
-            # (CentOS/RHEL 기반 시스템이라면 'sudo yum install -y python3-pip'로 변경)
-            if ! python3 -m pip --version >/dev/null 2>&1; then
-              echo "python3-pip is not installed. Installing python3-pip..."
-              sudo yum install -y python3-pip
-            else
-              echo "python3-pip is already installed."
-            fi
 
-            # pip 업그레이드 및 의존성 설치
-            python3 -m pip install --upgrade pip
-            pip3 install -r requirements.txt
-
-            # 백그라운드에서 서버 실행 (nohup과 & 사용)
-            # 표준 출력과 에러는 app.log로 리다이렉션
-            # TZ 환경 변수를 명시적으로 설정하여 서버 내부 시간대도 서울로 맞춤
-            nohup env TZ=Asia/Seoul python3 src/main.py > app.log 2>&1 &
-
-            # 백그라운드 프로세스 시작을 위한 짧은 대기 (1초)
-            sleep 1
+      - name: Deploy to EC2
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          KEY: ${{ secrets.EC2_KEY }}
+        run: |
+          echo "$KEY" > ec2key.pem
+          chmod 600 ec2key.pem
+          tar --exclude='.git' --warning=no-file-changed -czf code.tar.gz . || true
+          scp -i ec2key.pem -o StrictHostKeyChecking=no code.tar.gz $USER@$HOST:/home/$USER/python-ec2-github-actions/
+          ssh -i ec2key.pem -o StrictHostKeyChecking=no $USER@$HOST "
+            sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime &&
+            cd /home/$USER/python-ec2-github-actions &&
+            tar -xzf code.tar.gz &&
+            (python3 -m pip --version || python3 -m ensurepip --upgrade || sudo yum install -y python3-pip) &&
+            python3 -m pip install --upgrade pip &&
+            pip3 install -r requirements.txt &&
+            nohup env TZ=Asia/Seoul python3 src/main.py </dev/null > app.log 2>&1 & disown
+          "
+          
