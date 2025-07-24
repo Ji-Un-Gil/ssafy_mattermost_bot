@@ -30,7 +30,6 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
           KEY: ${{ secrets.EC2_KEY }}
         run: |
-          # EC2 키 파일을 생성하고 권한 설정
           echo "$KEY" > ec2key.pem
           chmod 600 ec2key.pem
 
@@ -60,6 +59,8 @@ jobs:
             # 표준 입력은 /dev/null로, 표준 출력과 에러는 app.log로 리다이렉션
             # TZ 환경 변수를 명시적으로 설정하여 서버 내부 시간대도 서울로 맞춤
             setsid nohup env TZ=Asia/Seoul python3 src/main.py </dev/null > app.log 2>&1 &
+            # 백그라운드 프로세스 시작을 위한 짧은 대기 (1초)
+            sleep 1 &&
             # SSH 세션 즉시 종료
             exit
           "
