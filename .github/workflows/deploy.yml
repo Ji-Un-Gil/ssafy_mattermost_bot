@@ -21,11 +21,40 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           script: |
+            # 시간대 설정 (서울)
             sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
+            # git 설치 (ubuntu/debian 기반 시스템의 경우)
+            # 이미 설치되어 있다면 건너뛰고, 설치되어 있지 않다면 설치합니다.
+            # 'dpkg -s git'은 git 패키지 설치 여부를 확인합니다.
+            if ! dpkg -s git >/dev/null 2>&1; then
+              echo "Git is not installed. Installing Git..."
+              sudo apt-get update -y
+              sudo apt-get install -y git
+            else
+              echo "Git is already installed."
+            fi
+
+            # 프로젝트 디렉토리로 이동
+            # 이 명령은 위에 있는 다른 명령들과 함께 하나의 스크립트 블록으로 실행됩니다.
             cd /home/${{ secrets.EC2_USER }}/python-ec2-github-actions
+
+            # 최신 코드 pull
             git pull origin main
+
+            # pip 업그레이드 및 의존성 설치
+            # python3-pip가 설치되어 있지 않을 경우를 대비하여 설치 명령 추가
+            (python3 -m pip --version || sudo yum install -y python3-pip) && \
             python3 -m pip install --upgrade pip
             pip3 install -r requirements.txt
+
+            # 기존에 실행 중인 python 서버 프로세스 종료 (있다면)
             pkill -f 'python3 src/main.py' || true
+
+            # 백그라운드에서 서버 실행 (nohup과 & 사용)
+            # 표준 출력과 에러는 app.log로 리다이렉션
+            # TZ 환경 변수를 명시적으로 설정하여 서버 내부 시간대도 서울로 맞춤
             nohup env TZ=Asia/Seoul python3 src/main.py > app.log 2>&1 &
+
+            # 백그라운드 프로세스 시작을 위한 짧은 대기 (1초)
             sleep 1
