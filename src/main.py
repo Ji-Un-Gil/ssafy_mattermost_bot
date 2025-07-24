@@ -5,8 +5,10 @@ import pytz
 
 
 def send_mattermost_message(webhook_url, message):
+    print(f"Sending message to Mattermost: {message}")
     payload = {'text': message}
     response = requests.post(webhook_url, json=payload)
+    print(f"Response status code: {response.status_code}")
     if response.status_code == 200:
         print('Message sent successfully to Mattermost!')
     else:
@@ -28,10 +30,12 @@ def schedule_multiple_notifications(webhook_url, messages, times):
         )
 
     scheduler.start()
+    print("Scheduler started. Waiting for scheduled times...")
 
 
 webhook_url = 'https://meeting.ssafy.com/hooks/s9kdaz8mp3ghxx5a8qgzzrfhha'
 messages = ['@all 입실 체크 하세요!', '@all 퇴실 체크 하세요!']
-times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '16:39']]
+times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '16:53']]
 
 schedule_multiple_notifications(webhook_url, messages, times)
+print("Scheduler has been set up with the specified times.")
