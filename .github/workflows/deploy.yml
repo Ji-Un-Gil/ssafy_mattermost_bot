@@ -29,8 +29,7 @@ jobs:
             # 'dpkg -s git'은 git 패키지 설치 여부를 확인합니다.
             if ! dpkg -s git >/dev/null 2>&1; then
               echo "Git is not installed. Installing Git..."
-              sudo apt-get update -y
-              sudo apt-get install -y git
+              sudo yum install -y git
             else
               echo "Git is already installed."
             fi
