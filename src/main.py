@@ -32,6 +32,6 @@ def schedule_multiple_notifications(webhook_url, messages, times):
 
 webhook_url = 'https://meeting.ssafy.com/hooks/s9kdaz8mp3ghxx5a8qgzzrfhha'
 messages = ['@all 입실 체크 하세요!', '@all 퇴실 체크 하세요!']
-times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '15:30']]
+times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '15:35']]
 
 schedule_multiple_notifications(webhook_url, messages, times)
