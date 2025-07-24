@@ -47,5 +47,5 @@ jobs:
             (python3 -m pip --version || python3 -m ensurepip --upgrade || sudo yum install -y python3-pip) &&
             python3 -m pip install --upgrade pip &&
             pip3 install -r requirements.txt &&
-            nohup env TZ=Asia/Seoul MATTERMOST_WEBHOOK_URL=\"$MATTERMOST_WEBHOOK_URL\" python3 src/main.py </dev/null > app.log 2>&1 & echo \$! > app.pid
+            nohup env TZ=Asia/Seoul MATTERMOST_WEBHOOK_URL=\"$MATTERMOST_WEBHOOK_URL\" python3 /home/$USER/python-ec2-github-actions/src/main.py </dev/null > app.log 2>&1 & echo \$! > app.pid
           ' & disown"
