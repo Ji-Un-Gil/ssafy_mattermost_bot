@@ -32,7 +32,7 @@ jobs:
         run: |
           echo "$KEY" > ec2key.pem
           chmod 600 ec2key.pem
-          tar --exclude='.git' -czf code.tar.gz .
+          tar --exclude='.git' --warning=no-file-changed -czf code.tar.gz . || true
           scp -i ec2key.pem -o StrictHostKeyChecking=no code.tar.gz $USER@$HOST:/home/$USER/python-ec2-github-actions/
           ssh -i ec2key.pem -o StrictHostKeyChecking=no $USER@$HOST '
             cd /home/$USER/python-ec2-github-actions &&
