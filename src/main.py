@@ -35,6 +35,6 @@ webhook_url = os.environ.get('MATTERMOST_WEBHOOK_URL')
 if not webhook_url:
     raise ValueError("MATTERMOST_WEBHOOK_URL environment variable is not set.")
 messages = ['@all 입실 체크 하세요!', '@all 퇴실 체크 하세요!']
-times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '22:27']]
+times = [datetime.strptime(time, '%H:%M') for time in ['08:30', '18:00']]
 
 schedule_multiple_notifications(webhook_url, messages, times)
