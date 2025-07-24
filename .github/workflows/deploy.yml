@@ -32,4 +32,10 @@ jobs:
           echo "$KEY" > ec2key.pem
           chmod 600 ec2key.pem
           scp -i ec2key.pem -o StrictHostKeyChecking=no -r . $USER@$HOST:/home/$USER/python-ec2-github-actions
-          ssh -i ec2key.pem -o StrictHostKeyChecking=no $USER@$HOST 'cd /home/$USER/python-ec2-github-actions && python3 src/main.py'
+          ssh -i ec2key.pem -o StrictHostKeyChecking=no $USER@$HOST '
+            cd /home/$USER/python-ec2-github-actions &&
+            python3 -m pip install --upgrade pip &&
+            pip3 install -r requirements.txt &&
+            python3 src/main.py
+          '
+          
