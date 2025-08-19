@@ -62,9 +62,9 @@ if __name__ == "__main__":
     
     messages = [
         '''@all 
-        # :check_0859_pyn: 입실 체크 하세요!''', 
+# :check_0859_pyn: 입실 체크 하세요!''', 
         '''@all 
-        # :out_check: 퇴실 체크 하세요!'''
+# :out_check: 퇴실 체크 하세요!'''
         ]
     times = [datetime.strptime(time, '%H:%M').time() for time in ['08:30', '18:00']]
 
